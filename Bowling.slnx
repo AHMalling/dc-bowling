@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Bowling.Cli/Bowling.Cli.csproj" />
+    <Project Path="src/Bowling/Bowling.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Bowling.Tests/Bowling.Tests.csproj" />
+  </Folder>
+</Solution>
