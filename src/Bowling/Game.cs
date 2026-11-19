@@ -16,6 +16,12 @@ public sealed class Game
 
     public bool IsComplete => FrameForNextRoll() is null;
 
+    /// <summary>
+    /// The scoreboard, computed from the rolls each time it is read. At most 21 rolls,
+    /// so recomputing is cheaper and simpler than keeping a cached copy in sync.
+    /// </summary>
+    public Scoreboard Scoreboard => Scorer.Score(_rolls);
+
     /// <summary>Records a roll.</summary>
     /// <exception cref="InvalidRollException">
     /// The number of pins is outside 0-10, more than the pins standing, or the game is already complete.

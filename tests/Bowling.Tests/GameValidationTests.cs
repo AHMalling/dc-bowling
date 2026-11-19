@@ -20,7 +20,7 @@ public class GameValidationTests
     [Fact]
     public void Two_rolls_in_a_frame_cannot_exceed_10()
     {
-        var game = GameWith(7);
+        var game = TestGames.With(7);
 
         var error = Assert.Throws<InvalidRollException>(() => game.Roll(5));
 
@@ -30,7 +30,7 @@ public class GameValidationTests
     [Fact]
     public void Frame_limit_is_checked_in_later_frames_too()
     {
-        var game = GameWith(10, 7);   // frame 1 is a strike, frame 2 starts with 7
+        var game = TestGames.With(10, 7);   // frame 1 is a strike, frame 2 starts with 7
 
         var error = Assert.Throws<InvalidRollException>(() => game.Roll(4));
 
@@ -40,7 +40,7 @@ public class GameValidationTests
     [Fact]
     public void A_strike_ends_the_frame_so_the_next_roll_has_all_10_pins()
     {
-        var game = GameWith(10);
+        var game = TestGames.With(10);
 
         game.Roll(10);
 
@@ -55,7 +55,7 @@ public class GameValidationTests
     [InlineData(0, 10, 10)]    // spare on the second roll
     public void Tenth_frame_allows_bonus_rolls_after_a_strike_or_spare(int first, int second, int third)
     {
-        var game = NineOpenFramesThen(first, second);
+        var game = TestGames.NineOpenFramesThen(first, second);
 
         game.Roll(third);
 
@@ -65,7 +65,7 @@ public class GameValidationTests
     [Fact]
     public void Tenth_frame_bonus_rolls_after_a_strike_share_one_rack()
     {
-        var game = NineOpenFramesThen(10, 5);
+        var game = TestGames.NineOpenFramesThen(10, 5);
 
         var error = Assert.Throws<InvalidRollException>(() => game.Roll(6));
 
@@ -75,7 +75,7 @@ public class GameValidationTests
     [Fact]
     public void An_open_tenth_frame_ends_the_game_after_two_rolls()
     {
-        var game = NineOpenFramesThen(3, 5);
+        var game = TestGames.NineOpenFramesThen(3, 5);
 
         var error = Assert.Throws<InvalidRollException>(() => game.Roll(1));
 
@@ -85,7 +85,7 @@ public class GameValidationTests
     [Fact]
     public void No_roll_is_allowed_after_a_perfect_game()
     {
-        var game = GameWith(Enumerable.Repeat(10, 12).ToArray());
+        var game = TestGames.Repeat(10, 12);
 
         Assert.Throws<InvalidRollException>(() => game.Roll(0));
     }
@@ -93,7 +93,7 @@ public class GameValidationTests
     [Fact]
     public void A_rejected_roll_leaves_the_game_unchanged()
     {
-        var game = GameWith(7);
+        var game = TestGames.With(7);
 
         Assert.Throws<InvalidRollException>(() => game.Roll(5));
         game.Roll(3);   // the game still accepts a valid roll afterwards
@@ -107,22 +107,8 @@ public class GameValidationTests
     [InlineData(20, true)]
     public void Game_is_complete_after_ten_open_frames(int gutterRolls, bool expected)
     {
-        var game = GameWith(Enumerable.Repeat(0, gutterRolls).ToArray());
+        var game = TestGames.Repeat(0, gutterRolls);
 
         Assert.Equal(expected, game.IsComplete);
     }
-
-    private static Game GameWith(params int[] rolls)
-    {
-        var game = new Game();
-        foreach (var pins in rolls)
-        {
-            game.Roll(pins);
-        }
-        return game;
-    }
-
-    /// <summary>Nine gutter frames, so the next rolls are in the 10th frame.</summary>
-    private static Game NineOpenFramesThen(params int[] tenthFrame) =>
-        GameWith([.. Enumerable.Repeat(0, 18), .. tenthFrame]);
 }
