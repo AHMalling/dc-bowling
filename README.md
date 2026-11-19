@@ -8,7 +8,7 @@ and the scoring, a command-line app to use it, and tests.
 Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```bash
-dotnet test                                              # 52 tests
+dotnet test                                              # 55 tests
 dotnet run --project src/Bowling.Cli                     # enter rolls one at a time
 dotnet run --project src/Bowling.Cli -- 1 4 4 5 6 4 5 5 10 0 1 7 3 6 4 10 2 8 6
 echo "10, 7, 3, 9, 0" | dotnet run --project src/Bowling.Cli   # rolls from standard input
@@ -25,8 +25,15 @@ The third command scores the example game from the brief:
 Total: 133 (final)
 ```
 
-An invalid roll is rejected with a message saying which roll and why, and exit code 1:
-`Roll 4 (5) was rejected: Only 3 pins are standing in frame 2, so 5 cannot be knocked down.`
+An invalid roll stops the app with exit code 1, after showing the scoreboard for the valid rolls before it:
+
+```
+Input: 3 4 7 [5] 2 1
+             ^ roll 4
+Error: roll 4 (5) is not valid. Only 3 pins are standing in frame 2, so 5 cannot be knocked down.
+The app stopped. The scoreboard above shows rolls 1-3. Also not scored: rolls 5-6, because each roll after an invalid one could end up in the wrong frame.
+Fix roll 4 and run again.
+```
 
 ## Structure
 
@@ -68,7 +75,9 @@ running total are `null` until they arrive, exactly as in the brief's example ta
 number that could still change. `Total` is the total of the settled frames.
 
 **5. Two CLI modes, one set of rules.** Rolls given as arguments (or piped in) are scored, and the first invalid roll
-stops the run with exit code 1, because a script needs a clear failure. In interactive mode, an invalid roll is
+stops the run with exit code 1, because a script needs a clear failure. It deliberately doesn't skip the bad roll and
+carry on: every later roll would land in the wrong frame and give scores that look plausible but are wrong. The
+report says what was scored, what wasn't, and points at the bad roll. In interactive mode, an invalid roll is
 reported and you just try again. The modes differ only in how they *react* to an invalid roll; what counts as
 invalid lives in `Game`. `App.Run` takes its input and output as parameters, so the tests run the whole CLI,
 exit codes included, without starting a process.

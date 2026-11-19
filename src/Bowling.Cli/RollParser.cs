@@ -11,25 +11,9 @@ internal static class RollParser
 {
     private static readonly char[] Separators = [' ', ',', '\t', '\r', '\n'];
 
-    public static bool TryParseRolls(
-        string text, out List<int> rolls, [NotNullWhen(false)] out string? error)
-    {
-        rolls = [];
-        var tokens = text.Split(Separators, StringSplitOptions.RemoveEmptyEntries);
-
-        for (var i = 0; i < tokens.Length; i++)
-        {
-            if (!TryParseRoll(tokens[i], out var pins, out var tokenError))
-            {
-                error = $"Roll {i + 1}: {tokenError}";
-                return false;
-            }
-            rolls.Add(pins);
-        }
-
-        error = null;
-        return true;
-    }
+    /// <summary>Splits input like "10, 7 3" into one token per roll.</summary>
+    public static string[] Split(string text) =>
+        text.Split(Separators, StringSplitOptions.RemoveEmptyEntries);
 
     public static bool TryParseRoll(string token, out int pins, [NotNullWhen(false)] out string? error)
     {

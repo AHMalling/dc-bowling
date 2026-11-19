@@ -41,29 +41,42 @@ internal static class App
 
     private static int ScoreRolls(string text, TextWriter output, TextWriter error)
     {
-        if (!RollParser.TryParseRolls(text, out var rolls, out var parseError))
-        {
-            error.WriteLine(parseError);
-            return InvalidInput;
-        }
-
+        var tokens = RollParser.Split(text);
         var game = new Game();
-        for (var i = 0; i < rolls.Count; i++)
+
+        for (var i = 0; i < tokens.Length; i++)
         {
-            try
+            var problem = TryRoll(game, tokens[i]);
+            if (problem is not null)
             {
-                game.Roll(rolls[i]);
-            }
-            catch (InvalidRollException e)
-            {
+                // Stop rather than skip: every roll after an invalid one could land in the wrong frame.
                 output.Write(ScoreboardRenderer.Render(game.Scoreboard));   // what was valid up to the error
-                error.WriteLine($"Roll {i + 1} ({rolls[i]}) was rejected: {e.Message}");
+                error.Write(RejectionReport.Describe(tokens, i, problem, gameWasComplete: game.IsComplete));
                 return InvalidInput;
             }
         }
 
         output.Write(ScoreboardRenderer.Render(game.Scoreboard));
         return Success;
+    }
+
+    /// <summary>Parses the token and rolls it. Returns why it was rejected, or null if the roll was recorded.</summary>
+    private static string? TryRoll(Game game, string token)
+    {
+        if (!RollParser.TryParseRoll(token, out var pins, out var parseError))
+        {
+            return parseError;
+        }
+
+        try
+        {
+            game.Roll(pins);
+            return null;
+        }
+        catch (InvalidRollException e)
+        {
+            return e.Message;
+        }
     }
 
     private static int RunInteractive(TextReader input, TextWriter output, TextWriter error)
@@ -81,19 +94,10 @@ internal static class App
                 return Success;
             }
 
-            if (!RollParser.TryParseRoll(line, out var pins, out var parseError))
+            var problem = TryRoll(game, line);
+            if (problem is not null)
             {
-                error.WriteLine(parseError);
-                continue;
-            }
-
-            try
-            {
-                game.Roll(pins);
-            }
-            catch (InvalidRollException e)
-            {
-                error.WriteLine(e.Message);
+                error.WriteLine($"{problem} Try again.");
                 continue;
             }
 
