@@ -8,4 +8,9 @@
     <ProjectReference Include="..\Bowling\Bowling.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The CLI's classes are internal; let the test project see them. -->
+    <InternalsVisibleTo Include="Bowling.Tests" />
+  </ItemGroup>
+
 </Project>
