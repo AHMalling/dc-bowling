@@ -90,9 +90,13 @@ is a single pass over a tiny list. Caching would add state to keep in sync for n
   frame) and the basic strike and spare rules.
 - **Validation**: each rule, including the 10th frame's bonus rolls and "the game is unchanged after a rejected roll".
 - **Games in progress**: strikes and spares waiting for their bonus show no score.
-- **Randomized invariants**: 2,000 random valid games from a fixed seed (reproducible). After every roll it checks
-  that the frames hold exactly the rolls, settled frames come first, running totals add up, and the total never
-  decreases or exceeds 300. A failure prints the game's rolls.
+- **Random games checked against an independent model**: 2,000 random valid games from a fixed seed
+  (reproducible). The test makes each game frame by frame straight from the brief's rules and scores it the classic
+  way (an index walking the rolls), sharing no code with the library. `Game` must accept every roll, be complete
+  exactly after the last one, and reach the same total. After every roll it also checks that the frames hold exactly
+  the rolls, settled frames come first, running totals add up, and the total never decreases or exceeds 300. A
+  failure prints the game's rolls. This is the same idea as reconciling a pipeline's output against a second,
+  independent calculation.
 - **CLI**: arguments and piped input, the error report, exit codes and the bowling notation.
 
 To check that the tests can actually fail, I broke the code on purpose a few times (no rack reset in the 10th frame,
@@ -106,7 +110,7 @@ that the invariant test missed a rule (unsettled frames must have no running tot
 - **Tracking the current frame and roll as fields.** Faster to read, but it is a second source of truth next to the
   rolls; see decision 1.
 - **The classic kata shape** (`Roll` + `Score()` returning an int). Simpler, but it can't show a frame-by-frame
-  scoreboard, which the brief's table suggests.
+  scoreboard, which the brief's table suggests. Its scoring loop is what the tests use as the independent reference.
 - **An interactive mode** that asks for one roll at a time. I built it and removed it again: the brief only asks
   for a way to exercise the code, one command per game does that better, and a second mode meant a second way of
   handling invalid rolls to explain and test.

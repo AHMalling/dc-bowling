@@ -3,7 +3,10 @@ using Xunit.Sdk;
 namespace Bowling.Tests;
 
 /// <summary>
-/// Plays many random but valid games and checks rules that must hold for every game and after every roll.
+/// Plays many random valid games and checks them against an independent model of the rules that shares no code
+/// with the library: <see cref="RandomGame"/> makes the rolls frame by frame, straight from the brief, and
+/// <see cref="ReferenceScore"/> scores them the classic way, with an index walking the rolls.
+/// Rules that must hold for any game are also checked after every roll.
 /// The seed is fixed, so a failure is reproducible, and the failing game's rolls are printed.
 /// </summary>
 public class InvariantTests
@@ -15,61 +18,99 @@ public class InvariantTests
     private const double ClearRackProbability = 0.3;
 
     [Fact]
-    public void Random_valid_games_keep_the_scoring_invariants()
+    public void Random_valid_games_match_the_reference_model_and_keep_the_invariants()
     {
         var random = new Random(Seed);
 
         for (var i = 0; i < GameCount; i++)
         {
+            var rolls = RandomGame(random);
             var game = new Game();
             var previousTotal = 0;
 
-            while (!game.IsComplete)
+            for (var r = 0; r < rolls.Count; r++)
             {
-                RollRandomValidRoll(game, random);
-
-                var scoreboard = game.Scoreboard;
-                Check(game, () => AssertHoldsAfterEveryRoll(game, scoreboard, previousTotal));
-                previousTotal = scoreboard.Total;
+                var isLastRoll = r == rolls.Count - 1;
+                var pins = rolls[r];
+                Check(game, rolls, () =>
+                {
+                    game.Roll(pins);   // every roll is valid, so Game must accept it
+                    var scoreboard = game.Scoreboard;
+                    AssertHoldsAfterEveryRoll(game, scoreboard, previousTotal);
+                    Assert.Equal(isLastRoll, scoreboard.IsComplete);   // complete exactly after the last roll
+                    previousTotal = scoreboard.Total;
+                });
             }
 
-            Check(game, () => AssertHoldsForCompleteGame(game));
+            Check(game, rolls, () =>
+            {
+                Assert.Equal(ReferenceScore(rolls), game.Scoreboard.Total);
+                AssertHoldsForCompleteGame(game);
+            });
         }
     }
+
+    /// <summary>The rolls of a random valid game, made frame by frame from the brief's rules.</summary>
+    private static List<int> RandomGame(Random random)
+    {
+        var rolls = new List<int>();
+
+        for (var frame = 1; frame <= 9; frame++)
+        {
+            var first = RandomRoll(random, 10);
+            rolls.Add(first);
+            if (first < 10)   // a strike ends the frame
+            {
+                rolls.Add(RandomRoll(random, 10 - first));
+            }
+        }
+
+        // 10th frame: a strike or a spare earns a third roll, and a cleared rack is set up again.
+        var tenthFirst = RandomRoll(random, 10);
+        var tenthSecond = RandomRoll(random, tenthFirst == 10 ? 10 : 10 - tenthFirst);
+        rolls.Add(tenthFirst);
+        rolls.Add(tenthSecond);
+        if (tenthFirst == 10 || tenthFirst + tenthSecond == 10)
+        {
+            var standing = tenthFirst == 10 && tenthSecond < 10 ? 10 - tenthSecond : 10;
+            rolls.Add(RandomRoll(random, standing));
+        }
+
+        return rolls;
+    }
+
+    private static int RandomRoll(Random random, int pinsStanding) =>
+        random.NextDouble() < ClearRackProbability ? pinsStanding : random.Next(pinsStanding + 1);
 
     /// <summary>
-    /// Makes one random valid roll. The test doesn't work out how many pins are standing; it lets <see cref="Game"/>
-    /// decide by trying rolls and trying again when one is rejected.
+    /// The classic way to score a complete game: walk the rolls with an index, one frame at a time,
+    /// and look ahead for the bonus. It shares nothing with <c>Scorer</c>, so the two check each other.
     /// </summary>
-    private static void RollRandomValidRoll(Game game, Random random)
+    private static int ReferenceScore(IReadOnlyList<int> rolls)
     {
-        if (random.NextDouble() < ClearRackProbability)
-        {
-            // Knock down every standing pin: the highest roll Game accepts, found by counting down from 10.
-            for (var pins = Rules.PinsPerRack; !TryRoll(game, pins); pins--)
-            {
-            }
-        }
-        else
-        {
-            // Any number 0-10, drawn again until Game accepts it, which is uniform over the valid rolls.
-            while (!TryRoll(game, random.Next(Rules.PinsPerRack + 1)))
-            {
-            }
-        }
-    }
+        var total = 0;
+        var i = 0;
 
-    private static bool TryRoll(Game game, int pins)
-    {
-        try
+        for (var frame = 1; frame <= 10; frame++)
         {
-            game.Roll(pins);
-            return true;
+            if (rolls[i] == 10)   // strike: 10 plus the next two rolls
+            {
+                total += 10 + rolls[i + 1] + rolls[i + 2];
+                i += 1;
+            }
+            else if (rolls[i] + rolls[i + 1] == 10)   // spare: 10 plus the next roll
+            {
+                total += 10 + rolls[i + 2];
+                i += 2;
+            }
+            else
+            {
+                total += rolls[i] + rolls[i + 1];
+                i += 2;
+            }
         }
-        catch (InvalidRollException)
-        {
-            return false;
-        }
+
+        return total;
     }
 
     private static void AssertHoldsAfterEveryRoll(Game game, Scoreboard scoreboard, int previousTotal)
@@ -96,7 +137,6 @@ public class InvariantTests
         }
 
         Assert.InRange(scoreboard.Total, previousTotal, 300);   // never goes down, never above a perfect game
-        Assert.Equal(game.IsComplete, scoreboard.IsComplete);
     }
 
     private static void AssertHoldsForCompleteGame(Game game)
@@ -110,16 +150,20 @@ public class InvariantTests
         Assert.Throws<InvalidRollException>(() => game.Roll(0));
     }
 
-    /// <summary>Runs the assertions and, if one fails, adds the game's rolls so the case can be reproduced.</summary>
-    private static void Check(Game game, Action assertions)
+    /// <summary>
+    /// Runs one step and, if it fails (a broken rule, or Game rejecting a valid roll), says where in which game,
+    /// so the case can be reproduced.
+    /// </summary>
+    private static void Check(Game game, IReadOnlyList<int> rolls, Action step)
     {
         try
         {
-            assertions();
+            step();
         }
-        catch (XunitException e)
+        catch (Exception e) when (e is XunitException or InvalidRollException)
         {
-            throw new XunitException($"Invariant broken for rolls [{string.Join(", ", game.Rolls)}]:\n{e.Message}");
+            throw new XunitException(
+                $"Failed after rolls [{string.Join(", ", game.Rolls)}] of the game [{string.Join(", ", rolls)}]:\n{e.Message}");
         }
     }
 }
