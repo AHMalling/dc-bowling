@@ -26,7 +26,7 @@ public class InvariantTests
 
             while (!game.IsComplete)
             {
-                game.Roll(RandomRoll(random, game.PinsStanding));
+                RollRandomValidRoll(game, random);
 
                 var scoreboard = game.Scoreboard;
                 Check(game, () => AssertHoldsAfterEveryRoll(game, scoreboard, previousTotal));
@@ -37,8 +37,40 @@ public class InvariantTests
         }
     }
 
-    private static int RandomRoll(Random random, int pinsStanding) =>
-        random.NextDouble() < ClearRackProbability ? pinsStanding : random.Next(pinsStanding + 1);
+    /// <summary>
+    /// Makes one random valid roll. The test doesn't work out how many pins are standing; it lets <see cref="Game"/>
+    /// decide by trying rolls and trying again when one is rejected.
+    /// </summary>
+    private static void RollRandomValidRoll(Game game, Random random)
+    {
+        if (random.NextDouble() < ClearRackProbability)
+        {
+            // Knock down every standing pin: the highest roll Game accepts, found by counting down from 10.
+            for (var pins = Rules.PinsPerRack; !TryRoll(game, pins); pins--)
+            {
+            }
+        }
+        else
+        {
+            // Any number 0-10, drawn again until Game accepts it, which is uniform over the valid rolls.
+            while (!TryRoll(game, random.Next(Rules.PinsPerRack + 1)))
+            {
+            }
+        }
+    }
+
+    private static bool TryRoll(Game game, int pins)
+    {
+        try
+        {
+            game.Roll(pins);
+            return true;
+        }
+        catch (InvalidRollException)
+        {
+            return false;
+        }
+    }
 
     private static void AssertHoldsAfterEveryRoll(Game game, Scoreboard scoreboard, int previousTotal)
     {

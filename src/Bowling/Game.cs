@@ -16,9 +16,6 @@ public sealed class Game
 
     public bool IsComplete => FrameForNextRoll() is null;
 
-    /// <summary>Pins standing for the next roll, or 0 when the game is complete.</summary>
-    public int PinsStanding => FrameForNextRoll()?.PinsStanding ?? 0;
-
     /// <summary>
     /// The scoreboard, computed from the rolls each time it is read. At most 21 rolls,
     /// so recomputing is cheaper and simpler than keeping a cached copy in sync.
