@@ -20,7 +20,7 @@ internal static class Scorer
             scores.Add(new FrameScore(frame.Number, frame.Pins, score, runningTotal));
         }
 
-        var isComplete = frames.Count == Rules.FramesPerGame && frames[^1].IsFinished;
+        var isComplete = frames.Count > 0 && frames[^1].EndsGame;
         return new Scoreboard(scores, isComplete);
     }
 

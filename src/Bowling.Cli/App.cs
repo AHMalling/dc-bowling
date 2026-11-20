@@ -43,8 +43,10 @@ internal static class App
             if (problem is not null)
             {
                 // Stop rather than skip: every roll after an invalid one could land in the wrong frame.
-                output.Write(ScoreboardRenderer.Render(game.Scoreboard));   // what was valid up to the error
-                error.Write(RejectionReport.Describe(tokens, i, problem, gameWasComplete: game.IsComplete));
+                output.Write(ScoreboardRenderer.Render(game.Scoreboard));   // the valid rolls before it
+                error.WriteLine(
+                    $"Error: roll {i + 1} ({tokens[i]}) is not valid. {problem} The app stopped there, "
+                    + "so the scoreboard only shows the rolls before it.");
                 return InvalidInput;
             }
         }

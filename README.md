@@ -13,7 +13,7 @@ dotnet run --project src/Bowling.Cli -- 1 4 4 5 6 4 5 5 10 0 1 7 3 6 4 10 2 8 6
 echo "10, 7, 3, 9, 0" | dotnet run --project src/Bowling.Cli   # rolls from standard input
 ```
 
-The third command scores the example game from the brief:
+The second command scores the example game from the brief:
 
 ```
 +-----+-----+-----+-----+-----+-----+-----+-----+-----+-------+
@@ -27,11 +27,7 @@ Total: 133 (final)
 An invalid roll stops the app with exit code 1, after showing the scoreboard for the valid rolls before it:
 
 ```
-Input: 3 4 7 [5] 2 1
-             ^ roll 4
-Error: roll 4 (5) is not valid. Only 3 pins are standing in frame 2, so 5 cannot be knocked down.
-The app stopped. The scoreboard above shows rolls 1-3. Also not scored: rolls 5-6, because each roll after an invalid one could end up in the wrong frame.
-Fix roll 4 and run again.
+Error: roll 4 (5) is not valid. Only 3 pins are standing in frame 2, so 5 cannot be knocked down. The app stopped there, so the scoreboard only shows the rolls before it.
 ```
 
 ## Structure
@@ -77,7 +73,7 @@ number that could still change. `Total` is the total of the settled frames.
 or piped in, so checking a game against a known score is one line, and a script can use it. The first invalid roll
 stops the run with exit code 1, because a script needs a clear failure. It deliberately doesn't skip the bad roll and
 carry on: every later roll would land in the wrong frame and give scores that look plausible but are wrong. The
-report says what was scored, what wasn't, and points at the bad roll. What counts as invalid lives in `Game`, not in
+error names the roll by position and value and says why it is invalid. What counts as invalid lives in `Game`, not in
 the CLI. `App.Run` takes its input and output as parameters, so the tests run the whole CLI, exit codes included,
 without starting a process.
 
@@ -97,7 +93,7 @@ is a single pass over a tiny list. Caching would add state to keep in sync for n
   the rolls, settled frames come first, running totals add up, and the total never decreases or exceeds 300. A
   failure prints the game's rolls. This is the same idea as reconciling a pipeline's output against a second,
   independent calculation.
-- **CLI**: arguments and piped input, the error report, exit codes and the bowling notation.
+- **CLI**: arguments and piped input, the error message, exit codes, help and the bowling notation.
 
 To check that the tests can actually fail, I broke the code on purpose a few times (no rack reset in the 10th frame,
 a strike bonus of one roll, an unsettled frame counted as 0) and confirmed that tests failed. The last one showed

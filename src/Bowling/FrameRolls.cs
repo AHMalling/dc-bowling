@@ -20,6 +20,9 @@ internal sealed record FrameRolls(int Number, int FirstRollIndex, IReadOnlyList<
         ? Pins.Count == 3 || (Pins.Count == 2 && !IsStrike && !IsSpare)
         : IsStrike || Pins.Count == 2;
 
+    /// <summary>The 10th frame is finished, so the game is over. The one definition of a complete game.</summary>
+    public bool EndsGame => IsLast && IsFinished;
+
     /// <summary>
     /// Pins standing for the next roll in this frame. When all pins are down the rack is reset,
     /// which only matters in the 10th frame (in frames 1-9 the frame is finished at that point).

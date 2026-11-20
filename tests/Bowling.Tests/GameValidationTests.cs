@@ -59,7 +59,7 @@ public class GameValidationTests
 
         game.Roll(third);
 
-        Assert.True(game.IsComplete);
+        Assert.True(game.Scoreboard.IsComplete);
     }
 
     [Fact]
@@ -109,6 +109,6 @@ public class GameValidationTests
     {
         var game = TestGames.Repeat(0, gutterRolls);
 
-        Assert.Equal(expected, game.IsComplete);
+        Assert.Equal(expected, game.Scoreboard.IsComplete);
     }
 }

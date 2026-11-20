@@ -14,8 +14,6 @@ public sealed class Game
     /// <summary>The pins knocked down by each roll, in order: the raw data everything else is computed from.</summary>
     public IReadOnlyList<int> Rolls => _rolls.AsReadOnly();
 
-    public bool IsComplete => FrameForNextRoll() is null;
-
     /// <summary>
     /// The scoreboard, computed from the rolls each time it is read. At most 21 rolls,
     /// so recomputing is cheaper and simpler than keeping a cached copy in sync.
@@ -61,6 +59,6 @@ public sealed class Game
             return last;
         }
 
-        return last.IsLast ? null : new FrameRolls(last.Number + 1, _rolls.Count, []);
+        return last.EndsGame ? null : new FrameRolls(last.Number + 1, _rolls.Count, []);
     }
 }
