@@ -1,6 +1,9 @@
 namespace Bowling;
 
-/// <summary>The numbers from the rules of ten-pin bowling, named once.</summary>
+/// <summary>
+/// The fixed numbers of the game, named so the two 10s can't be mixed up.
+/// The rules for strikes, spares and when a frame ends live in <see cref="FrameRolls"/>.
+/// </summary>
 public static class Rules
 {
     public const int PinsPerRack = 10;

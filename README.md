@@ -43,6 +43,10 @@ src/Bowling.Cli/      the command-line app: parsing input and drawing the scoreb
 tests/Bowling.Tests/  xUnit tests for both
 ```
 
+The rules are a library with no I/O, and the CLI is just one way in. A web API or a batch job could use the same
+`Game` without touching the rules. Everything except `Game` and its results is `internal`, so every caller goes
+through `Game`'s validation; the compiler enforces that, not discipline.
+
 ## Design decisions
 
 **1. The rolls are the raw data; everything else is derived.** `Game` stores only the list of rolls. Frames,
