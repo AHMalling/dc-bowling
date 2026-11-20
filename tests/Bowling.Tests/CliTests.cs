@@ -96,25 +96,6 @@ public class CliTests
         Assert.Contains("Remove rolls 21-22 and run again.", result.Error);
     }
 
-    [Fact]
-    public void Interactive_mode_reports_an_invalid_roll_and_asks_again()
-    {
-        var result = RunCli([], input: "7\n5\nabc\n3\nq\n", interactive: true);
-
-        Assert.Equal(App.Success, result.ExitCode);
-        Assert.Contains("Only 3 pins are standing in frame 1", result.Error);
-        Assert.Contains("'abc' is not a whole number of pins.", result.Error);
-        Assert.Contains("Frame 2, 10 pins standing >", result.Output);   // 7 and 3 were accepted
-    }
-
-    [Fact]
-    public void Interactive_mode_ends_with_the_final_score()
-    {
-        var result = RunCli([], input: string.Join('\n', Enumerable.Repeat("10", 12)), interactive: true);
-
-        Assert.Contains("Game complete. Final score: 300", result.Output);
-    }
-
     [Theory]
     [InlineData(new[] { 10 }, "X")]
     [InlineData(new[] { 7, 3 }, "7 /")]
@@ -130,11 +111,11 @@ public class CliTests
 
     private sealed record CliResult(int ExitCode, string Output, string Error);
 
-    private static CliResult RunCli(string[] args, string input = "", bool interactive = false)
+    private static CliResult RunCli(string[] args, string input = "")
     {
         var output = new StringWriter();
         var error = new StringWriter();
-        var exitCode = App.Run(args, new StringReader(input), output, error, interactive);
+        var exitCode = App.Run(args, new StringReader(input), output, error);
         return new CliResult(exitCode, output.ToString(), error.ToString());
     }
 }

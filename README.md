@@ -8,8 +8,7 @@ and the scoring, a command-line app to use it, and tests.
 Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download).
 
 ```bash
-dotnet test                                              # 55 tests
-dotnet run --project src/Bowling.Cli                     # enter rolls one at a time
+dotnet test                                              # 53 tests
 dotnet run --project src/Bowling.Cli -- 1 4 4 5 6 4 5 5 10 0 1 7 3 6 4 10 2 8 6
 echo "10, 7, 3, 9, 0" | dotnet run --project src/Bowling.Cli   # rolls from standard input
 ```
@@ -74,13 +73,13 @@ real lane (subtract each roll, reset the rack when all pins are down), and that 
 running total are `null` until they arrive, exactly as in the brief's example table. The scoreboard never shows a
 number that could still change. `Total` is the total of the settled frames.
 
-**5. Two CLI modes, one set of rules.** Rolls given as arguments (or piped in) are scored, and the first invalid roll
+**5. The CLI scores a whole game in one command and stops at the first invalid roll.** Rolls are given as arguments
+or piped in, so checking a game against a known score is one line, and a script can use it. The first invalid roll
 stops the run with exit code 1, because a script needs a clear failure. It deliberately doesn't skip the bad roll and
 carry on: every later roll would land in the wrong frame and give scores that look plausible but are wrong. The
-report says what was scored, what wasn't, and points at the bad roll. In interactive mode, an invalid roll is
-reported and you just try again. The modes differ only in how they *react* to an invalid roll; what counts as
-invalid lives in `Game`. `App.Run` takes its input and output as parameters, so the tests run the whole CLI,
-exit codes included, without starting a process.
+report says what was scored, what wasn't, and points at the bad roll. What counts as invalid lives in `Game`, not in
+the CLI. `App.Run` takes its input and output as parameters, so the tests run the whole CLI, exit codes included,
+without starting a process.
 
 **6. Performance: recomputing is the fast and simple choice.** A game has at most 21 rolls, so splitting and scoring
 is a single pass over a tiny list. Caching would add state to keep in sync for no measurable gain.
@@ -94,7 +93,7 @@ is a single pass over a tiny list. Caching would add state to keep in sync for n
 - **Randomized invariants**: 2,000 random valid games from a fixed seed (reproducible). After every roll it checks
   that the frames hold exactly the rolls, settled frames come first, running totals add up, and the total never
   decreases or exceeds 300. A failure prints the game's rolls.
-- **CLI**: both modes, exit codes and the bowling notation.
+- **CLI**: arguments and piped input, the error report, exit codes and the bowling notation.
 
 To check that the tests can actually fail, I broke the code on purpose a few times (no rack reset in the 10th frame,
 a strike bonus of one roll, an unsettled frame counted as 0) and confirmed that tests failed. The last one showed
@@ -108,6 +107,9 @@ that the invariant test missed a rule (unsettled frames must have no running tot
   rolls; see decision 1.
 - **The classic kata shape** (`Roll` + `Score()` returning an int). Simpler, but it can't show a frame-by-frame
   scoreboard, which the brief's table suggests.
+- **An interactive mode** that asks for one roll at a time. I built it and removed it again: the brief only asks
+  for a way to exercise the code, one command per game does that better, and a second mode meant a second way of
+  handling invalid rolls to explain and test.
 - **A property-testing library** (FsCheck). It shrinks failures to the smallest case, but a seeded loop with
   hand-written invariants did the job without another dependency.
 

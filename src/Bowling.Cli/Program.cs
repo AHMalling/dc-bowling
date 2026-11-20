@@ -1,6 +1,7 @@
 ﻿using Bowling.Cli;
 
-// Ask for rolls one at a time only when a person is typing: no arguments and nothing piped in.
-var interactive = args.Length == 0 && !Console.IsInputRedirected;
+// No rolls given and nothing piped in: there is nothing to score, so show how to use the app
+// (reading standard input would otherwise just wait).
+string[] arguments = args.Length == 0 && !Console.IsInputRedirected ? ["--help"] : args;
 
-return App.Run(args, Console.In, Console.Out, Console.Error, interactive);
+return App.Run(arguments, Console.In, Console.Out, Console.Error);
