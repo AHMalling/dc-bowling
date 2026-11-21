@@ -67,7 +67,7 @@ in parallel.
 ## Scope
 
 I kept to the brief: one player, and a CLI that scores a whole game in one command, so it is easy to check against
-a known score. The public API is three members (`Game.Roll`, `Rolls` and `Scoreboard`), and there are no packages
+a known score. `Game` has three public members (`Roll`, `Rolls` and `Scoreboard`), and there are no packages
 beyond the xUnit test template. Further features are under Next steps.
 
 ## Tests
