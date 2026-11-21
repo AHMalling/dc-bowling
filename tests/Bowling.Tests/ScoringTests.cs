@@ -1,6 +1,6 @@
 namespace Bowling.Tests;
 
-/// <summary>AC1-AC7: scores of finished games, including every example from the brief.</summary>
+/// <summary>Scores of finished games, including every example from the brief.</summary>
 public class ScoringTests
 {
     [Fact]
@@ -85,7 +85,7 @@ public class ScoringTests
     }
 }
 
-/// <summary>AC9: a game in progress only shows totals for settled frames.</summary>
+/// <summary>A game in progress only shows totals for settled frames.</summary>
 public class InProgressScoringTests
 {
     [Fact]

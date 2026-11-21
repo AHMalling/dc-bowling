@@ -1,7 +1,7 @@
 namespace Bowling.Tests;
 
 /// <summary>
-/// AC8: invalid rolls are rejected with a clear message and leave the game unchanged.
+/// Invalid rolls are rejected with a clear message and leave the game unchanged.
 /// </summary>
 public class GameValidationTests
 {

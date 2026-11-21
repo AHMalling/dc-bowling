@@ -2,7 +2,7 @@ namespace Bowling;
 
 /// <summary>
 /// The one place that knows where a frame ends and the next begins.
-/// Used both to validate the next roll and (later) to score the game.
+/// Used both to validate the next roll and to score the game.
 /// </summary>
 internal static class FrameSplitter
 {

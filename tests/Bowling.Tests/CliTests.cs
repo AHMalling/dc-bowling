@@ -2,7 +2,7 @@ using Bowling.Cli;
 
 namespace Bowling.Tests;
 
-/// <summary>AC10: the CLI shows the scoreboard, and invalid input gives a readable error and exit code 1.</summary>
+/// <summary>The CLI shows the scoreboard, and invalid input gives a readable error and exit code 1.</summary>
 public class CliTests
 {
     [Fact]
